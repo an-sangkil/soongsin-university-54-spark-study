@@ -70,9 +70,11 @@ class JavaDecisionTreeRegressionExample {
 		System.out.println("Learned regression tree model:\n" + model.toDebugString());
 
 		// Save and load model
-		model.save(jsc.sc(), "target/tmp/myDecisionTreeRegressionModel");
+		//model.save(jsc.sc(), "target/tmp/myDecisionTreeRegressionModel");
 		DecisionTreeModel sameModel = DecisionTreeModel.load(jsc.sc(), "target/tmp/myDecisionTreeRegressionModel");
 		// $example off$
+		
+		sameModel.formatVersion();
 		
 		
 		
