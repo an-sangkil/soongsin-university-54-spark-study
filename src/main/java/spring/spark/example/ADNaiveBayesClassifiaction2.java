@@ -25,6 +25,8 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import scala.Tuple2;
 /**
@@ -33,7 +35,11 @@ import scala.Tuple2;
  *
  */
 public class ADNaiveBayesClassifiaction2 {
+	final static Logger logger = LoggerFactory.getLogger(ADNaiveBayesClassifiaction2.class);
+	
 	public static void main(String[] args) throws Exception {
+		
+		logger.info("ADNaiveBayesClassifiaction Start ~ ~");
 		
 		System.setProperty("hadoop.home.dir", "D:/example/spark/spark-2.1.0-bin-hadoop2.7/spark-2.1.0-bin-hadoop2.7");
 		
@@ -108,7 +114,7 @@ public class ADNaiveBayesClassifiaction2 {
 
 		// 빈발 항목 빈발 벡터 가중치 적용
 		System.out.println("//////////////////////////////////////");
-		System.out.println("//			idfModel DATA			  ");
+		System.out.println("//			TDIDF - Model DATA			  ");
 		Dataset<Row> rescaledData = idfModel.transform(featurizedData);
 		rescaledData.show();
 		//rescaledData.select("label","words" , "features", "rawFeatures").show();
@@ -140,6 +146,8 @@ public class ADNaiveBayesClassifiaction2 {
 		Arrays.stream(nbModel.labels()).forEach(label -> {System.out.println("labels = " + label);});
 		Arrays.stream(nbModel.pi()).forEach( pi -> {System.out.println("pi= " + pi);});
 		System.out.println("[" + dataPoint.label() + "] 예측 분류기값 = " + predictValue);
+		
+		
 		
 		
 		////////////////////////////////////////////////////////////////
