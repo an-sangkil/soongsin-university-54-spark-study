@@ -102,8 +102,8 @@ public class ADNaiveBayesClassifiaction2 {
 									.setOutputCol("rawFeatures")
 									.setNumFeatures(numFeatures);
 		Dataset<Row> featurizedData = hashingTF.transform(wordsData);
-		System.out.println("//////////////////////////////////////");
-		System.out.println("//			hashingTF DATA			  ");
+		logger.info("//////////////////////////////////////");
+		logger.info("//			hashingTF DATA			  ");
 		//featurizedData.show();
 		
 		// alternatively, CountVectorizer can also be used to get term frequency
@@ -113,8 +113,8 @@ public class ADNaiveBayesClassifiaction2 {
 		IDFModel idfModel = idf.fit(featurizedData);
 
 		// 빈발 항목 빈발 벡터 가중치 적용
-		System.out.println("//////////////////////////////////////");
-		System.out.println("//			TDIDF - Model DATA			  ");
+		logger.info("//////////////////////////////////////");
+		logger.info("//			TDIDF - Model DATA			  ");
 		Dataset<Row> rescaledData = idfModel.transform(featurizedData);
 		rescaledData.show();
 		//rescaledData.select("label","words" , "features", "rawFeatures").show();
@@ -136,8 +136,8 @@ public class ADNaiveBayesClassifiaction2 {
 		LabeledPoint dataPoint =  LabeledPointdata
 													.take(100)
 													.get(0);
-        System.out.println("dataPoint.features() = " + dataPoint.features());
-        System.out.println("dataPoint.label() = " + dataPoint.label());
+		logger.info("dataPoint.features() = " + dataPoint.features());
+		logger.info("dataPoint.label() = " + dataPoint.label());
         
         // 1.
 		NaiveBayesModel nbModel = NaiveBayes.train(JavaRDD.toRDD(LabeledPointdata));
@@ -146,8 +146,6 @@ public class ADNaiveBayesClassifiaction2 {
 		Arrays.stream(nbModel.labels()).forEach(label -> {System.out.println("labels = " + label);});
 		Arrays.stream(nbModel.pi()).forEach( pi -> {System.out.println("pi= " + pi);});
 		System.out.println("[" + dataPoint.label() + "] 예측 분류기값 = " + predictValue);
-		
-		
 		
 		
 		////////////////////////////////////////////////////////////////
@@ -163,18 +161,16 @@ public class ADNaiveBayesClassifiaction2 {
 					return new Tuple2<>(model.predict(p.features()), p.label());
 				}
 		);
-		
 		double accuracy = predictionAndLabel.filter(
 				pl -> pl._1().equals(pl._2())
 		).count() / (double) test.count();
-		
 		
 		// 실제 예측 모델 튜플로 확인
 		predictionAndLabel.foreach(datas -> {
 			        System.out.println("model="+datas._1() + " label=" + datas._2());
 				});
 		
-		System.out.println("RANDOM 정확도=" +  accuracy  + "%");
+		logger.info("RANDOM 정확도=" +  accuracy  + "%");
 		jsc.stop();
 	}
 }
