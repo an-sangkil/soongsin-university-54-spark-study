@@ -9,15 +9,15 @@
  
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%-5level] %logger{0} - %msg%n</pattern>
+            <pattern>%-5level %d{HH:mm:ss.SSS} [%thread] %logger[%method:%line] - %msg%n</pattern>
         </encoder>
     </appender>
 	
-	<logger name="spring.spark.example" level="debug"	additivity="false">
-		<appender-ref ref="STDOUT" />
-	</logger>
+	<logger name="org.spark_project.jetty" level="warn"></logger>
+	<logger name="org.apache.spark" level="error"></logger>
+	<logger name="spring.spark.example" level="debug"></logger>
 	          
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="console"/>
     </root>
      

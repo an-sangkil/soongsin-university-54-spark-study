@@ -34,8 +34,8 @@ import scala.Tuple2;
  * @author skan
  *
  */
-public class ADNaiveBayesClassifiaction2 {
-	final static Logger logger = LoggerFactory.getLogger(ADNaiveBayesClassifiaction2.class);
+public class ADNaiveBayesClassifiactionMllib {
+	final static Logger logger = LoggerFactory.getLogger(ADNaiveBayesClassifiactionMllib.class);
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -165,9 +165,10 @@ public class ADNaiveBayesClassifiaction2 {
 				pl -> pl._1().equals(pl._2())
 		).count() / (double) test.count();
 		
+		
 		// 실제 예측 모델 튜플로 확인
 		predictionAndLabel.foreach(datas -> {
-			        System.out.println("model="+datas._1() + " label=" + datas._2());
+					logger.info("model="+datas._1() + " label=" + datas._2());
 				});
 		
 		logger.info("RANDOM 정확도=" +  accuracy  + "%");
