@@ -1,8 +1,10 @@
 package spring.spark.example;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 // $example off$
 import org.apache.spark.SparkConf;
@@ -30,7 +32,11 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import scala.Predef;
+import scala.Predef$;
 import scala.Tuple2;
+import scala.collection.mutable.WrappedArray;
+import spring.spark.example.model.Advertisement;
 /**
  * 나이브 베이지안을 이용한 광고 카테고리 분류. 
  * @author skan
@@ -158,18 +164,35 @@ public class ADNaiveBayesClassifiactionMl {
 		predictions.show();
 		
 		List<Row> listOne = predictions.collectAsList();
+		List<Advertisement> advertisements = new ArrayList<>();
 		listOne.forEach(prd->{
 			logger.info("/////////////////////////////////////");
-			
 			double label  = prd.getDouble(0);
-			String sentence = prd.getString(1);
+			WrappedArray<?> wordAr  = (WrappedArray<?>) prd.get(2);
 			
+			scala.collection.Iterator iter = wordAr.iterator();
+			//while (iter.hasNext()) 
+			//System.out.println(iter.next());
+			//Predef$.MODULE$.wrapString(wordAr);
+			
+			wordAr.toList();
+			
+			
+			
+			String sentence = prd.getString(1);
 			DenseVector probabilitys  = (DenseVector)prd.get(6);
 			logger.info("테스트 라벨 [{}] 텍스트 =[{}]", label, sentence);
+			
 			Arrays.stream(probabilitys.values())
-						.sorted()
-						.forEach( probability->
-							logger.info("우선순위  예측 확율 = {}" ,probability)
+						//.sorted()
+						.forEach( probability-> {
+							int seq =0;
+							
+							
+							advertisements.add(new Advertisement(seq++, label, probability, ""));
+							logger.info("우선순위  예측 확율 = {}" ,probability);
+						}
+						
 					);
 		});
 				
@@ -181,7 +204,7 @@ public class ADNaiveBayesClassifiactionMl {
 															.setMetricName("accuracy");
 		
 		double accuracy = evaluator.evaluate(predictions);
-		System.out.println("Test set accuracy = " + accuracy);
+		logger.info("Test set accuracy = {}",  accuracy);
 		// $example off$
 		
 		jsc.stop();
