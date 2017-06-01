@@ -4,6 +4,7 @@ package spring.spark.example;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 // $example off$
@@ -164,7 +165,6 @@ public class ADNaiveBayesClassifiactionMl {
 		predictions.show();
 		
 		List<Row> listOne = predictions.collectAsList();
-		List<Advertisement> advertisements = new ArrayList<>();
 		listOne.forEach(prd->{
 			logger.info("/////////////////////////////////////");
 			double label  = prd.getDouble(0);
@@ -177,23 +177,37 @@ public class ADNaiveBayesClassifiactionMl {
 			
 			wordAr.toList();
 			
-			
-			
 			String sentence = prd.getString(1);
 			DenseVector probabilitys  = (DenseVector)prd.get(6);
+			
 			logger.info("테스트 라벨 [{}] 텍스트 =[{}]", label, sentence);
+			
+			AtomicInteger ai = new AtomicInteger();
+			List<Advertisement> advertisements = new ArrayList<>();
 			
 			Arrays.stream(probabilitys.values())
 						//.sorted()
 						.forEach( probability-> {
-							int seq =0;
-							
-							
-							advertisements.add(new Advertisement(seq++, label, probability, ""));
-							logger.info("우선순위  예측 확율 = {}" ,probability);
+							int seq  = ai.incrementAndGet();
+							advertisements.add(new Advertisement(seq++, label, probability, sentence));
+							//logger.info("우선순위  예측 확율 = {}" ,probability);
 						}
-						
 					);
+			
+			// DESC 정렬 
+			advertisements.stream().sorted( (a,b) -> 
+					(a.getProbability()  > a.getProbability())? -1: (a.getProbability()  > a.getProbability())? 1:0 
+				)
+//				.forEach( ad -> {
+//					
+//					logger.info(" 라벨 = {} ,  우선순위  예측 확율 = {}" , ad.getOrder(), ad.getProbability());
+//						
+//					
+//					}
+//				)
+				;
+			
+			
 		});
 				
 
