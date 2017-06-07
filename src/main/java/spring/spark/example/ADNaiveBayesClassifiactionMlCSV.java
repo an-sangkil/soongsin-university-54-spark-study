@@ -121,7 +121,7 @@ public class ADNaiveBayesClassifiactionMlCSV {
 		////////////////////////////////////////////////////////////////
 		// RANDOM  트레인데이터 60% , 테스트 데이터 40%
 		////////////////////////////////////////////////////////////////
-		Dataset<Row>[] splits  = rescaledData.randomSplit(new double[] { 0.2, 0.8 });
+		Dataset<Row>[] splits  = rescaledData.randomSplit(new double[] { 0.5, 0.5 });
 		Dataset<Row> training = splits[0]; // training set
 		Dataset<Row> test = splits[1]; // test set
 		
@@ -174,7 +174,7 @@ public class ADNaiveBayesClassifiactionMlCSV {
 			 
 			// DESC 정렬
 			advertisements.stream().sorted(Comparator.comparing(Advertisement :: getProbability ).reversed() ).forEach( ad -> {
-				logger.info(" 라벨 = {} ,  우선순위  예측 확율 = {} , words = {}" , ad.getOrder(), ad.getProbability() , ad.getWords()  );
+				//logger.info(" 라벨 = {} ,  우선순위  예측 확율 = {} , words = {}" , ad.getOrder(), ad.getProbability() , ad.getWords()  );
 			});
 			
 		});
