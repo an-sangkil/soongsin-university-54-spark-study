@@ -3,8 +3,10 @@ package spring.spark.example;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 // $example off$
@@ -23,6 +25,7 @@ import org.apache.spark.ml.classification.NaiveBayes;
 import org.apache.spark.ml.classification.NaiveBayesModel;
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.RelationalGroupedDataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
@@ -147,6 +150,12 @@ public class ADNaiveBayesClassifiactionMl {
 		rescaledData.show(1000);
 		//rescaledData.select("label","words" , "features", "rawFeatures").show();
 		
+		//logger.info("//			TDIDF - Model DATA			  GROUP");
+		//RelationalGroupedDataset aa =  rescaledData.select("label").groupBy("label");
+		//Dataset<Row> a =aa.org$apache$spark$sql$RelationalGroupedDataset$$df;
+		//a.show(1000);
+		
+		
 		////////////////////////////////////////////////////////////////
 		// RANDOM  트레인데이터 60% , 테스트 데이터 40%
 		////////////////////////////////////////////////////////////////
@@ -157,30 +166,29 @@ public class ADNaiveBayesClassifiactionMl {
 		// create the trainer and set its parameters
 		NaiveBayes nb = new NaiveBayes();
 
-		// train the model
+		// 학습 모델
 		NaiveBayesModel model = nb.fit(training);
-
+		
 		// Select example rows to display.
 		Dataset<Row> predictions = model.transform(test);
 		predictions.show();
 		
+		// 예측 데이터 결과
 		List<Row> listOne = predictions.collectAsList();
 		listOne.forEach(prd->{
 			logger.info("/////////////////////////////////////");
 			double label  = prd.getDouble(0);
-			WrappedArray<?> wordAr  = (WrappedArray<?>) prd.get(2);
-			
-			scala.collection.Iterator iter = wordAr.iterator();
+			//WrappedArray<?> wordAr  = (WrappedArray<?>) prd.get(2);
+			//scala.collection.Iterator iter = wordAr.iterator();
 			//while (iter.hasNext()) 
 			//System.out.println(iter.next());
 			//Predef$.MODULE$.wrapString(wordAr);
-			
-			wordAr.toList();
+			//wordAr.toList();
 			
 			String sentence = prd.getString(1);
 			DenseVector probabilitys  = (DenseVector)prd.get(6);
 			
-			logger.info("테스트 라벨 [{}] 텍스트 =[{}]", label, sentence);
+			logger.info("Test Data 라벨  [{}] 텍스트 =[{}]", label, sentence);
 			
 			AtomicInteger ai = new AtomicInteger();
 			List<Advertisement> advertisements = new ArrayList<>();
@@ -189,24 +197,15 @@ public class ADNaiveBayesClassifiactionMl {
 						//.sorted()
 						.forEach( probability-> {
 							int seq  = ai.incrementAndGet();
-							advertisements.add(new Advertisement(seq++, label, probability, sentence));
+							advertisements.add(new Advertisement((seq-1), label, probability, sentence));
 							//logger.info("우선순위  예측 확율 = {}" ,probability);
 						}
 					);
 			
-			// DESC 정렬 
-			advertisements.stream().sorted( (a,b) -> 
-					(a.getProbability()  > a.getProbability())? -1: (a.getProbability()  > a.getProbability())? 1:0 
-				)
-//				.forEach( ad -> {
-//					
-//					logger.info(" 라벨 = {} ,  우선순위  예측 확율 = {}" , ad.getOrder(), ad.getProbability());
-//						
-//					
-//					}
-//				)
-				;
-			
+			// DESC 정렬
+			advertisements.stream().sorted(Comparator.comparing(Advertisement :: getProbability ).reversed() ).forEach( ad -> {
+				logger.info(" 라벨 = {} ,  우선순위  예측 확율 = {} , words = {}" , ad.getOrder(), ad.getProbability() , ""  );
+			});
 			
 		});
 				
@@ -216,6 +215,7 @@ public class ADNaiveBayesClassifiactionMl {
 															.setLabelCol("label")
 															.setPredictionCol("prediction")
 															.setMetricName("accuracy");
+		
 		
 		double accuracy = evaluator.evaluate(predictions);
 		logger.info("Test set accuracy = {}",  accuracy);
