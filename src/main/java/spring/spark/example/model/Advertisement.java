@@ -14,6 +14,15 @@ public class Advertisement {
 		this.probability = probability;
 		this.words = words;
 	}
+	
+	public Advertisement(float order, double label, double probability, String words , String originalCategory) {
+		super();
+		this.order = order;
+		this.label = label;
+		this.probability = probability;
+		this.words = words;
+		this.originalCategory = originalCategory; 
+	}
 	/**
 	 * 순서
 	 */
@@ -33,7 +42,17 @@ public class Advertisement {
 	 */
 	private String words;
 	
+	/**
+	 * 오리지널 카테고리 정보
+	 */
+	private String originalCategory;
 	
+	public String getOriginalCategory() {
+		return originalCategory;
+	}
+	public void setOriginalCategory(String originalCategory) {
+		this.originalCategory = originalCategory;
+	}
 	public float getOrder() {
 		return order;
 	}

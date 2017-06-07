@@ -6,41 +6,29 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 // $example off$
 import org.apache.spark.SparkConf;
-import org.apache.spark.annotation.DeveloperApi;
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.ml.feature.HashingTF;
-import org.apache.spark.ml.feature.IDF;
-import org.apache.spark.ml.feature.IDFModel;
-import org.apache.spark.ml.feature.StringIndexer;
-import org.apache.spark.ml.feature.Tokenizer;
-import org.apache.spark.ml.linalg.DenseVector;
-import org.apache.spark.ml.linalg.Vector;
+import org.apache.spark.ml.attribute.Attribute;
 import org.apache.spark.ml.classification.NaiveBayes;
 import org.apache.spark.ml.classification.NaiveBayesModel;
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator;
+import org.apache.spark.ml.feature.HashingTF;
+import org.apache.spark.ml.feature.IDF;
+import org.apache.spark.ml.feature.IDFModel;
+import org.apache.spark.ml.feature.IndexToString;
+import org.apache.spark.ml.feature.StringIndexer;
+import org.apache.spark.ml.feature.StringIndexerModel;
+import org.apache.spark.ml.feature.Tokenizer;
+import org.apache.spark.ml.linalg.DenseVector;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.RelationalGroupedDataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import scala.Predef;
-import scala.Predef$;
-import scala.Tuple2;
-import scala.collection.mutable.WrappedArray;
 import spring.spark.example.model.Advertisement;
 /**
  * 나이브 베이지안을 이용한 광고 카테고리 분류. 
@@ -69,12 +57,31 @@ public class ADNaiveBayesClassifiactionMlCSV {
 				.csv("data/ad/adcategory.csv");
 				//.format("csv").load("data/ad/adcategory.csv");
 		
-		StringIndexer indexer = new StringIndexer()
-				  .setInputCol("category")
-				  .setOutputCol("label");
+		// Spring Indexer Model을 이용하여 label 생성  > [카테고리 번호]를 기준으로 label 생성
+		//StringIndexer indexer = new StringIndexer()
+		//		  .setInputCol("category")
+		//		  .setOutputCol("label");
 		
-		Dataset<Row> sentenceData = indexer.fit(df).transform(df);
-		sentenceData.show(1000);
+		StringIndexerModel indexer = new StringIndexer()
+						  .setInputCol("category")
+						  .setOutputCol("label").fit(df);
+		
+		Dataset<Row> indexed = indexer.transform(df);
+		indexed.show(20);
+		
+		StructField inputColSchema = indexed.schema().apply(indexer.getOutputCol());
+		System.out.println("StringIndexer will store labels in output column metadata: " +
+			    Attribute.fromStructField(inputColSchema).toString() + "\n");
+		
+		
+		
+		IndexToString converter = new IndexToString()
+				  .setInputCol("label")
+				  .setOutputCol("originalCategory");
+		Dataset<Row> sentenceData = converter.transform(indexed);
+		
+		
+		
 		
 		Tokenizer tokenizer = new Tokenizer().setInputCol("text").setOutputCol("words");
 		Dataset<Row> wordsData = tokenizer.transform(sentenceData);
@@ -114,7 +121,7 @@ public class ADNaiveBayesClassifiactionMlCSV {
 		////////////////////////////////////////////////////////////////
 		// RANDOM  트레인데이터 60% , 테스트 데이터 40%
 		////////////////////////////////////////////////////////////////
-		Dataset<Row>[] splits  = rescaledData.randomSplit(new double[] { 0.7, 0.3 });
+		Dataset<Row>[] splits  = rescaledData.randomSplit(new double[] { 0.2, 0.8 });
 		Dataset<Row> training = splits[0]; // training set
 		Dataset<Row> test = splits[1]; // test set
 		
@@ -126,7 +133,7 @@ public class ADNaiveBayesClassifiactionMlCSV {
 		
 		// Select example rows to display.
 		Dataset<Row> predictions = model.transform(test);
-		predictions.show(1000);
+		predictions.show();
 		
 		// 예측 데이터 결과
 		List<Row> listOne = predictions.collectAsList();
@@ -140,10 +147,11 @@ public class ADNaiveBayesClassifiactionMlCSV {
 			//Predef$.MODULE$.wrapString(wordAr);
 			//wordAr.toList();
 			
-			String sentence = prd.getAs("text");
+			String sentence 		= prd.getAs("text");
+			String originalCategory = prd.getAs("originalCategory");
 			DenseVector probabilitys  = (DenseVector)prd.getAs("probability");
 			
-			logger.info("Test Data 라벨  [{}] 텍스트 =[{}]", label, sentence);
+			//logger.info("Test Data 라벨  [{}] 텍스트 =[{}]", label, sentence);
 			
 			AtomicInteger ai = new AtomicInteger();
 			List<Advertisement> advertisements = new ArrayList<>();
@@ -152,7 +160,7 @@ public class ADNaiveBayesClassifiactionMlCSV {
 						//.sorted()
 						.forEach( probability-> {
 							int seq  = ai.incrementAndGet();
-							advertisements.add(new Advertisement((seq-1), label, probability, sentence));
+							advertisements.add(new Advertisement((seq-1), label, probability, sentence ,originalCategory));
 							//logger.info("우선순위  예측 확율 = {}" ,probability);
 						}
 					);
@@ -180,8 +188,7 @@ public class ADNaiveBayesClassifiactionMlCSV {
 		
 		
 		double accuracy = evaluator.evaluate(predictions);
-		logger.info("Test set accuracy = {}",  accuracy);
-		// $example off$
+		logger.info("AD Data Test set accuracy = {}",  accuracy);
 		
 		jsc.stop();
 	}
