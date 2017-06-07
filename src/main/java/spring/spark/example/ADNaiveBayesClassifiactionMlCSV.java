@@ -18,6 +18,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.ml.feature.HashingTF;
 import org.apache.spark.ml.feature.IDF;
 import org.apache.spark.ml.feature.IDFModel;
+import org.apache.spark.ml.feature.StringIndexer;
 import org.apache.spark.ml.feature.Tokenizer;
 import org.apache.spark.ml.linalg.DenseVector;
 import org.apache.spark.ml.linalg.Vector;
@@ -59,71 +60,23 @@ public class ADNaiveBayesClassifiactionMlCSV {
 		JavaSparkContext jsc = new JavaSparkContext(sparkConf);
 		SparkSession spark = SparkSession
 			      .builder()
-			      .appName("ADNaiveBayesClassifiaction")
+			      .appName("ADNaiveBayesClassifiactionMlCSV")
 			      .getOrCreate() ;
 		
 		
-		// Input data: Each row is a bag of words from a sentence or document.
-		List<Row> data = Arrays.asList(
-		  RowFactory.create(1.0 , "자동차 오락실 게임 리그오브레전드 아케이드"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(3.0 , "내비게이션 도구 GPS 지도 대중교통 교통수단"),
-		  RowFactory.create(0.0 , "여행 비행기 아시아나 대한항공"),
-		  RowFactory.create(0.0 , "여행 비행기 아시아나 대한항공"),
-		  RowFactory.create(0.0 , "여행 비행기 아시아나 대한항공"),
-		  RowFactory.create(0.0 , "여행 비행기 아시아나 대한항공"),
-		  RowFactory.create(0.0 , "여행 비행기 아시아나 대한항공"),
-		  RowFactory.create(0.0 , "여행 비행기 아시아나 대한항공"),
-		  RowFactory.create(0.0 , "여행 비행기 아시아나 대한항공"),
-		  RowFactory.create(1.0 , "자동차 오락실 게임 리그오브레전드 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(1.0 , "자동차 게임 리니지 바둑 아케이드"),
-		  RowFactory.create(0.0  , "Logistic regression models are neat"),
-		  RowFactory.create(3.0, "I wish Java could use case classes"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩 파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(2.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드"),
-		  RowFactory.create(1.0, "스타일 가이드 웨딩  파티 플래닝 방법 가이드")
-		);
-		StructType schema = new StructType(
-				new StructField[] { 
-						new StructField("label", DataTypes.DoubleType, false, Metadata.empty()),
-						new StructField("sentence", DataTypes.StringType, false, Metadata.empty()) });
-		Dataset<Row> sentenceData = spark.createDataFrame(data, schema);
-
-		Tokenizer tokenizer = new Tokenizer().setInputCol("sentence").setOutputCol("words");
+		Dataset<Row> df = spark.read()
+				.option("header", true)
+				.csv("data/ad/adcategory.csv");
+				//.format("csv").load("data/ad/adcategory.csv");
+		
+		StringIndexer indexer = new StringIndexer()
+				  .setInputCol("category")
+				  .setOutputCol("label");
+		
+		Dataset<Row> sentenceData = indexer.fit(df).transform(df);
+		sentenceData.show(1000);
+		
+		Tokenizer tokenizer = new Tokenizer().setInputCol("text").setOutputCol("words");
 		Dataset<Row> wordsData = tokenizer.transform(sentenceData);
 
 		// 키워드 해싱 
@@ -148,6 +101,8 @@ public class ADNaiveBayesClassifiactionMlCSV {
 		logger.info("//			TDIDF - Model DATA			  ");
 		Dataset<Row> rescaledData = idfModel.transform(featurizedData);
 		rescaledData.show(1000);
+		
+		// 특정 컬럼만 선택 하여 보기.
 		//rescaledData.select("label","words" , "features", "rawFeatures").show();
 		
 		//logger.info("//			TDIDF - Model DATA			  GROUP");
@@ -171,13 +126,13 @@ public class ADNaiveBayesClassifiactionMlCSV {
 		
 		// Select example rows to display.
 		Dataset<Row> predictions = model.transform(test);
-		predictions.show();
+		predictions.show(1000);
 		
 		// 예측 데이터 결과
 		List<Row> listOne = predictions.collectAsList();
 		listOne.forEach(prd->{
 			logger.info("/////////////////////////////////////");
-			double label  = prd.getDouble(0);
+			double label  = prd.getAs("label");
 			//WrappedArray<?> wordAr  = (WrappedArray<?>) prd.get(2);
 			//scala.collection.Iterator iter = wordAr.iterator();
 			//while (iter.hasNext()) 
@@ -185,8 +140,8 @@ public class ADNaiveBayesClassifiactionMlCSV {
 			//Predef$.MODULE$.wrapString(wordAr);
 			//wordAr.toList();
 			
-			String sentence = prd.getString(1);
-			DenseVector probabilitys  = (DenseVector)prd.get(6);
+			String sentence = prd.getAs("text");
+			DenseVector probabilitys  = (DenseVector)prd.getAs("probability");
 			
 			logger.info("Test Data 라벨  [{}] 텍스트 =[{}]", label, sentence);
 			
@@ -201,16 +156,14 @@ public class ADNaiveBayesClassifiactionMlCSV {
 							//logger.info("우선순위  예측 확율 = {}" ,probability);
 						}
 					);
+			
+			
 			// List<Advertisement> orderList =advertisements.stream().sorted(
-			// (a,b) ->
-			// (a.getProbability() > a.getProbability())? -1:
-			// (a.getProbability() < a.getProbability())? 1:0
-			// ).collect(Collectors.toList());
+			//		 (a,b) -> (a.getProbability() > a.getProbability())? -1: (a.getProbability() < a.getProbability())? 1:0).collect(Collectors.toList());
 			// orderList.forEach( ad -> {
-			// logger.info(" 라벨 = {} , 우선순위 예측 확율 = {}" , ad.getOrder(),
-			// ad.getProbability());
-			// }
-			// )
+			//	 						logger.info(" 라벨 = {} , 우선순위 예측 확율 = {}" , ad.getOrder(),ad.getProbability());
+			//	 });
+			 
 			// DESC 정렬
 			advertisements.stream().sorted(Comparator.comparing(Advertisement :: getProbability ).reversed() ).forEach( ad -> {
 				logger.info(" 라벨 = {} ,  우선순위  예측 확율 = {} , words = {}" , ad.getOrder(), ad.getProbability() , ad.getWords()  );
